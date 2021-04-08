@@ -120,10 +120,13 @@ classdef FitClass < handle
                 error('Variable arguments must occur in name/value pairs!');
             else
                 includeZero = false;
+                plotResiduals = true;
                 for nn=1:2:numel(varargin)
                     switch lower(varargin{nn})
                         case 'includezero'
                             includeZero = varargin{nn+1};
+                        case 'plotresiduals'
+                            plotResiduals = varargin{nn+1};
                         otherwise
                             error('Option %s not recognized',varargin{nn});
                     end
@@ -146,7 +149,9 @@ classdef FitClass < handle
             end
             xplot = xplot(:);
             yplot = obj.f(xplot);
-            subplot(3,1,1:2);
+            if plotResiduals
+                subplot(3,1,1:2);
+            end
             if obj.useErr
                 errorbar(obj.x(~obj.ex),obj.y(~obj.ex),obj.dy(~obj.ex),'o','markersize',4);
             else
@@ -155,10 +160,12 @@ classdef FitClass < handle
             hold on;
             plot(xplot,yplot,'r-');
 %             hold off;
-            subplot(3,1,3);
-            errorbar(obj.x(~obj.ex),obj.res,ones(size(obj.x(~obj.ex))),'o','markersize',4);
-            hold on;
-            grid on;
+            if plotResiduals
+                subplot(3,1,3);
+                errorbar(obj.x(~obj.ex),obj.res,ones(size(obj.x(~obj.ex))),'o','markersize',4);
+                hold on;
+                grid on;
+            end
         end
         
         %F Returns the fit function value

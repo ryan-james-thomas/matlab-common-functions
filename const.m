@@ -86,7 +86,10 @@ classdef const < handle
                 xlabel('Frequency [Hz]');ylabel('RMS Amplitude [V]');
             elseif strcmpi(plotType,'nsd')
                 plot(f,abs(Y)/sqrt(diff(f(1:2))),'.-');
-                xlabel('Frequency [Hz]');ylabel('Noise spectral density [VHz^{-1/2}]');
+                xlabel('Frequency [Hz]');ylabel('Noise amplitude spectral density [[x units] Hz^{-1/2}]');
+            elseif strcmpi(plotType,'psd')
+                plot(f,(abs(Y)/sqrt(diff(f(1:2)))).^2,'.-');
+                xlabel('Frequency [Hz]');ylabel('Noise power spectral density [[x units]^2 Hz^{-1}]');
             end
             xlim([0,max(f)]);
         end
@@ -99,17 +102,45 @@ classdef const < handle
             %
             %   const.calcFFT(data,dt,sm) calculates the FFT of the data 
             %   with time step dt with the smoothed signal removed.  
+            if numel(dt) > 1
+                dt = abs(dt(2)-dt(1));
+            end
             N=size(data,1);
             f=1/(dt)*(0:N-1)/(N);
             f=f(1:floor(N/2));
             f=f(:);
             if nargin==3
-                data=servo.smooth(data,sm);
+                data = const.smooth(data,sm);
             end
             Y=fft(data,[],1);
             Y=Y(1:floor(N/2),:);
             Y(1,:) = Y(1,:)/N;
             Y(2:end,:) = 2*Y(2:end,:)/N;
+        end
+        
+        function y = smooth(data,sm)
+            %SMOOTH Subtracts smoothed version of data from data
+            %
+            %   y = const.smooth(data,sm) computes a smoothed version of
+            %   data using smoothing length sm and removes that from the
+            %   data
+            if any(size(data) == 1)
+                data = data(:);
+            end
+            if isempty(sm)
+                y = data;
+                return;
+            end
+            y = zeros(size(data));
+            for nn = 1:size(data,2)
+                y(:,nn) = data(:,nn) - smooth(data(:,nn),sm);
+            end
+        end
+        
+        function [P,f] = calcPSD(data,dt,varargin)
+            [Y,f] = const.calcFFT(data,dt,varargin{:});
+            Y = Y/sqrt(2);
+            P = abs(Y).^2./(f(2)-f(1));
         end
     end
     

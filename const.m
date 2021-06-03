@@ -85,10 +85,10 @@ classdef const < handle
                 plot(f,abs(Y),'.-');
                 xlabel('Frequency [Hz]');ylabel('RMS Amplitude [V]');
             elseif strcmpi(plotType,'nsd')
-                plot(f,abs(Y)/sqrt(diff(f(1:2))),'.-');
+                loglog(f,abs(Y)/sqrt(diff(f(1:2))),'.-');
                 xlabel('Frequency [Hz]');ylabel('Noise amplitude spectral density [[x units] Hz^{-1/2}]');
             elseif strcmpi(plotType,'psd')
-                plot(f,(abs(Y)/sqrt(diff(f(1:2)))).^2,'.-');
+                loglog(f,(abs(Y)/sqrt(diff(f(1:2)))).^2,'.-');
                 xlabel('Frequency [Hz]');ylabel('Noise power spectral density [[x units]^2 Hz^{-1}]');
             end
             xlim([0,max(f)]);

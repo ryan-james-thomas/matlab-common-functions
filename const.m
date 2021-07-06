@@ -105,15 +105,15 @@ classdef const < handle
             if numel(dt) > 1
                 dt = abs(dt(2)-dt(1));
             end
-            N=size(data,1);
-            f=1/(dt)*(0:N-1)/(N);
-            f=f(1:floor(N/2));
-            f=f(:);
+            N = size(data,1);
+            f = 1/(dt)*(0:N-1)/(N);
+            f = f(1:floor(N/2));
+            f = f(:);
             if nargin==3
                 data = const.smooth(data,sm);
             end
-            Y=fft(data,[],1);
-            Y=Y(1:floor(N/2),:);
+            Y = fft(data,[],1);
+            Y = Y(1:floor(N/2),:);
             Y(1,:) = Y(1,:)/N;
             Y(2:end,:) = 2*Y(2:end,:)/N;
         end
@@ -138,9 +138,77 @@ classdef const < handle
         end
         
         function [P,f] = calcPSD(data,dt,varargin)
+            %CALCPSD Calculates the one-sided power spectral density and
+            %returns it and the frequency vector
+            %
+            %   [P,f] = CALCPSD(DATA,DT,VARARGIN) calculates the one-sided
+            %   power spectral density P and returns it and the frequency
+            %   vector F based on DATA and time difference DT.  DT can also
+            %   be a vector of times which is used to calculate the time
+            %   difference.  VARARGIN is any valid variable argument list
+            %   for CALCFFT
             [Y,f] = const.calcFFT(data,dt,varargin{:});
             Y = Y/sqrt(2);
             P = abs(Y).^2./(f(2)-f(1));
+        end
+        
+        function [R,tau] = calcAutoCorrelation(data,dt,method,varargin)
+            %CALCAUTOCORRELATION Calculates the autocorrelation of the
+            %signal based on the power spectral density
+            %
+            %   [R,TAU] = CALCAUTOCORRELATION(DATA,DT,VARARGIN) calculates
+            %   the one-sided autocorrelation function R and the vector of
+            %   time delays TAU based on DATA and time difference DT.
+            %   VARARGIN can be any valid variable argument list for
+            %   CALCFFT
+            if numel(dt) > 1
+                dt = abs(dt(2)-dt(1));
+            end
+            if strcmpi(method,'psd')
+                [P,f] = const.calcPSD(data,dt,varargin{:});
+                P = [P;flipud(P(2:end,:))];
+                R = numel(P)/2*(f(2) - f(1))*real(ifft(P,[],1));
+                N = size(R,1);
+                R = R(1:floor(N/2),:);
+                tau = dt*(0:(size(R,1)-1));
+            elseif strcmpi(method,'direct')
+                N = size(data,1);
+                if numel(varargin) == 1
+                    tauStep = varargin{1};
+                else
+                    tauStep = max(1,floor(N/100));
+                end
+                tau = (0:tauStep:(floor(N/2)-1))';
+                R = zeros(numel(tau),size(data,2));
+                for nn = 1:numel(tau)
+                    tmp1 = data(1:(end-tau(nn)),:);
+                    tmp2 = data((tau(nn)+1):end,:);
+                    R(nn,:) = mean(tmp1.*tmp2,1);
+                end
+                tau = tau.*dt;
+%             elseif strcmpi(method,'overlap')
+%                 N = size(data,1);
+%                 if numel(varargin) == 1
+%                     numSegments = varargin{1};
+%                 else
+%                     numSegments = max(floor(N/1e4),1);
+%                 end
+%                 Ns = floor(N/numSegments);
+%                 data = data(1:(numSegments*Ns),:);
+%                 R = zeros(Ns,size(data,2));
+%                 tau = (0:(Ns-1))';
+%                 for col = 1:size(data,2)
+%                     idx = 
+%                     tmp1 = reshape(data(
+%                     
+%                     for nn = 1:numel(tau)
+%                         tmp1 = data(1:(end-tau(nn)),col);
+%                         tmp2 = data((tau(nn)+1):end,col);
+%                         R(nn,:) = mean(tmp1.*tmp2,1);
+%                     end
+%                     tau = tau.*dt;
+%                 end
+            end
         end
     end
     

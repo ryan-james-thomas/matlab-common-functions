@@ -24,7 +24,7 @@ figure(fig);
 
 set(fig,'units','centimeters');
 pos = get(fig,'position');
-set(fig,'paperunits','centimeters','papersize',pos(3:4),'paperposition',pos);
+set(fig,'paperunits','centimeters','papersize',pos(3:4),'paperposition',[0,0,pos(3:4)]);
 
 print([filename,'.',filetype],['-d',filetype],['-r',sprintf('%d',fileres)],['-',printmethod]);
 if savematlabfig

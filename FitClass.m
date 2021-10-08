@@ -55,6 +55,7 @@ classdef FitClass < handle
                     obj.ex(ex) = true;
                 end
             end
+            obj.ex = obj.ex | isnan(obj.y) | isinf(obj.y);
             obj.checkSizes();
         end
         
@@ -215,16 +216,43 @@ classdef FitClass < handle
         end
         
         function s = struct(self)
-            %STRUCT Creates a structure from the object
-            p = properties(self);
-            for nn = 1:numel(p)
-                s.(p{nn}) = self.(p{nn});
-            end
+            %STRUCT Creates a struct representing the object
+            
+            s.x = self.x;
+            s.y = self.y;
+            s.dy = self.dy;
+            s.ex = self.ex;
+            s.func = self.func;
+            s.useErr = self.useErr;
+            s.c = self.c;
+            s.Vcov = self.Vcov;
+            s.Vcorr = self.Vcorr;
+            s.res = self.res;
+            s.gof = self.gof;
+        end
+        
+        function s = saveobj(self)
+            %SAVEOBJ Creates a structure representing the object for saving
+            s = struct(self);
         end
     end
     
     methods (Abstract)
         p = fit(obj);
+    end
+    
+    methods(Static)
+        function s = loadobj(a)
+            %LOADOBJ Converts structure into class
+            s = linfit(a.x,a.y,a.dy,a.ex);
+            s.func = a.func;
+            s.useErr = a.useErr;
+            s.c = a.c;
+            s.Vcov = a.Vcov;
+            s.Vcorr = a.Vcorr;
+            s.res = a.res;
+            s.gof = a.gof;
+        end
     end
     
     

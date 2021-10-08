@@ -29,6 +29,7 @@ classdef allandev
                 tau = ceil(logspace(0,log10(rows/2),N));
             end
             
+            tau = tau(:);
             
         end
         

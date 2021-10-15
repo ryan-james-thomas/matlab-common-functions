@@ -55,6 +55,7 @@ classdef FitClass < handle
                     obj.ex(ex) = true;
                 end
             end
+            obj.ex = obj.ex | isnan(obj.y) | isinf(obj.y);
             obj.checkSizes();
         end
         
@@ -172,15 +173,86 @@ classdef FitClass < handle
         %
         %F(X) Returns the fit function value for a given X with the current
         %coefficients
-        function v = f(obj,x)
+        function v = f(obj,x,cc)
             x = x(:);
-            cc = num2cell(obj.c(:,1));
-            v = obj.func(cc{:},x);
+            if nargin == 2
+                cc = num2cell(obj.c(:,1));
+                v = obj.func(cc{:},x);
+            else
+                cc = num2cell(cc);
+                v = obj.func(cc{:},x);
+            end
+        end
+        
+        function self = montecarlo(self,iter,bootstrap)
+            %MONTECARLO Performs Monte Carlo analysis of the fit result
+            %
+            %   OBJ = MONTECARLO(ITER,BOOTSTRAP) Computes the covariance
+            %   matrix for the resulting fit using Monte Carlo techniques
+            %   using ITER iterations.  If BOOTSTRAP == 0, then simulates
+            %   data set with noise equivalent to DY.  If BOOTSTRAP == 1,
+            %   then uses the bootstrap method of selecting only a subset
+            %   of data before fitting
+            
+            s = struct(self);
+            coeffs = zeros(iter,size(s.c,1));
+            
+            for nn = 1:iter
+                if nargin < 3 || bootstrap
+                    idx = randi(numel(self.y),numel(self.y),1);
+                    self.set(s.x(idx),s.y(idx),s.dy(idx),s.ex(idx));
+                else
+                    self.dy = self.f(self.x) + self.dy*randn(size(self.dy));
+                end
+                tmp = self.fit;
+                coeffs(nn,:) = tmp(:,1)';
+            end
+            
+            self.Vcov = cov(coeffs);
+            self.Vcorr = corr(coeffs);
+            self.gof = s.gof;
+            self.c = s.c;
+            self.res = s.res;
+        end
+        
+        function s = struct(self)
+            %STRUCT Creates a struct representing the object
+            
+            s.x = self.x;
+            s.y = self.y;
+            s.dy = self.dy;
+            s.ex = self.ex;
+            s.func = self.func;
+            s.useErr = self.useErr;
+            s.c = self.c;
+            s.Vcov = self.Vcov;
+            s.Vcorr = self.Vcorr;
+            s.res = self.res;
+            s.gof = self.gof;
+        end
+        
+        function s = saveobj(self)
+            %SAVEOBJ Creates a structure representing the object for saving
+            s = struct(self);
         end
     end
     
     methods (Abstract)
         p = fit(obj);
+    end
+    
+    methods(Static)
+        function s = loadobj(a)
+            %LOADOBJ Converts structure into class
+            s = linfit(a.x,a.y,a.dy,a.ex);
+            s.func = a.func;
+            s.useErr = a.useErr;
+            s.c = a.c;
+            s.Vcov = a.Vcov;
+            s.Vcorr = a.Vcorr;
+            s.res = a.res;
+            s.gof = a.gof;
+        end
     end
     
     

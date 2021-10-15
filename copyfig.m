@@ -36,6 +36,7 @@ for nn=1:numel(axOld)
             end
         end
     end
+    drawnow;
 end
 
 

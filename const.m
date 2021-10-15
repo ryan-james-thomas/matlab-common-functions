@@ -23,6 +23,7 @@ classdef const < handle
         EHartree=const.hbar*const.c*const.alpha/const.aBohr;
         
         g=9.81;
+        G = 6.67e-11;
     end
     
     methods(Static)

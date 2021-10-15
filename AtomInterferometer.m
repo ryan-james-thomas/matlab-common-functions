@@ -19,7 +19,7 @@ classdef AtomInterferometer < handle
             H = w.*G;
         end
         
-        function noise = calcPhaseNoise(f,psd,tau,T)
+        function noise = calcPhaseNoise(f,psd,tau,T,weights)
             %CALCPHASENOISE Calculates the contribution to interferometer
             %phase noise from a measurement of a power spectral density
             %
@@ -27,11 +27,19 @@ classdef AtomInterferometer < handle
             %   standard deviation NOISE for each pulse separation T given
             %   frequencies F and power spectral density PSD.  The PSD and
             %   F are real-frequency quantities.
+            %
+            %   NOISE = CALCPHASENOISE(__,WEIGHTs) Applies weights WEIGHTS
+            %   to the PSD for each time T.  WEIGHTS should have the same
+            %   length as T
+            
+            if nargin < 5
+                weights = ones(size(T));
+            end
             noise = zeros(numel(T),1);
             for nn = 1:numel(T)
                 H = AtomInterferometer.sensitivity(tau,T(nn),f);
                 idx = ~isnan(H) & ~isnan(psd) & ~isinf(H) & ~isinf(psd);
-                noise(nn) = sqrt(trapz(f(idx),abs(H(idx)).^2.*psd(idx)));
+                noise(nn) = sqrt(trapz(f(idx),abs(H(idx)).^2.*psd(idx).*weights(nn)));
             end
         end
         

@@ -173,10 +173,46 @@ classdef FitClass < handle
         %
         %F(X) Returns the fit function value for a given X with the current
         %coefficients
-        function v = f(obj,x)
+        function v = f(obj,x,cc)
             x = x(:);
-            cc = num2cell(obj.c(:,1));
-            v = obj.func(cc{:},x);
+            if nargin == 2
+                cc = num2cell(obj.c(:,1));
+                v = obj.func(cc{:},x);
+            else
+                cc = num2cell(cc);
+                v = obj.func(cc{:},x);
+            end
+        end
+        
+        function self = montecarlo(self,iter,bootstrap)
+            %MONTECARLO Performs Monte Carlo analysis of the fit result
+            %
+            %   OBJ = MONTECARLO(ITER,BOOTSTRAP) Computes the covariance
+            %   matrix for the resulting fit using Monte Carlo techniques
+            %   using ITER iterations.  If BOOTSTRAP == 0, then simulates
+            %   data set with noise equivalent to DY.  If BOOTSTRAP == 1,
+            %   then uses the bootstrap method of selecting only a subset
+            %   of data before fitting
+            
+            s = struct(self);
+            coeffs = zeros(iter,size(s.c,1));
+            
+            for nn = 1:iter
+                if nargin < 3 || bootstrap
+                    idx = randi(numel(self.y),numel(self.y),1);
+                    self.set(s.x(idx),s.y(idx),s.dy(idx),s.ex(idx));
+                else
+                    self.dy = self.f(self.x) + self.dy*randn(size(self.dy));
+                end
+                tmp = self.fit;
+                coeffs(nn,:) = tmp(:,1)';
+            end
+            
+            self.Vcov = cov(coeffs);
+            self.Vcorr = corr(coeffs);
+            self.gof = s.gof;
+            self.c = s.c;
+            self.res = s.res;
         end
         
         function s = struct(self)

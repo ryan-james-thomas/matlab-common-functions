@@ -23,6 +23,27 @@ classdef const < handle
         EHartree=const.hbar*const.c*const.alpha/const.aBohr;
         
         g=9.81;
+        
+       
+        
+        %%Rubidium associated "constant"
+        f_Rb_groundHFS=6.834e9; %hyperfine splitting between the ground states
+        k_Rb_groundHFS=0;
+        %wavevector tranistion from gound state to excited state
+        k_Rb_F1_to_F0=0;
+        k_Rb_F1_to_F1=0;
+        k_Rb_F1_to_F2=384.234683e12*2*pi/299792458;
+        k_Rb_F2_to_F1=0;
+        k_Rb_F2_to_F2=0;
+        k_Rb_F2_to_F3=0;
+        %frequency transition from ground state to excited state
+        f_Rb_F1_to_F0=0;
+        f_Rb_F1_to_F1=0;
+        f_Rb_F1_to_F2=0;
+        f_Rb_F2_to_F1=0;
+        f_Rb_Rb_F2_to_F2=0;
+        f_Rb_F2_to_F3=0;
+        
     end
     
     methods(Static)
@@ -135,6 +156,17 @@ classdef const < handle
             for nn = 1:size(data,2)
                 y(:,nn) = data(:,nn) - smooth(data(:,nn),sm);
             end
+        end
+        
+        function y = butterworth(data,width,order)
+            if nargin < 3
+                order = 4;
+            end
+            Y = fftshift(fft(data));
+            N = size(Y,1);
+            f = 0.5*linspace(-1,1,N)';
+            F = (1 + (f*width).^(2*order)).^-1;
+            y = real(ifft(ifftshift(Y.*F)));
         end
         
         function [P,f] = calcPSD(data,dt,varargin)

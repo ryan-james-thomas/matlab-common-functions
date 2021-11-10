@@ -57,6 +57,30 @@ classdef nonlinfit < FitClass
             end
         end
         
+        function self = bounds2(self,varargin)
+            if mod(numel(varargin),2) ~= 0
+                error('Arguments must be in name/value pairs');
+            elseif isempty(self.func)
+                error('A function must be supplied to use this method!');
+            end
+            
+            anoninputs = strsplit(regexp(func2str(self.func), '(?<=^@\()[^\)]*', 'match', 'once'), ',');
+            N = numel(anoninputs) - 1;
+            anoninputs = anoninputs(1:N);
+            
+            [self.lower,self.upper,self.guess] = deal(NaN(1,N));
+            for nn = 1:numel(anoninputs)
+                for mm = 1:2:numel(varargin)
+                    if strcmp(varargin{mm},anoninputs{nn})
+                        self.lower(nn) = varargin{mm + 1}(1);
+                        self.upper(nn) = varargin{mm + 1}(2);
+                        self.guess(nn) = varargin{mm + 1}(3);
+                    end
+                end
+            end
+            
+        end
+        
         function print(obj)
             %PRINT Prints the fit results with the bounds and guess
             obj.bounds;

@@ -213,6 +213,10 @@ classdef FitClass < handle
             self.gof = s.gof;
             self.c = s.c;
             self.res = s.res;
+            self.x = s.x;
+            self.y = s.y;
+            self.dy = s.dy;
+            self.ex = s.ex;
         end
         
         function s = struct(self)

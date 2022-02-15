@@ -1,96 +1,183 @@
 classdef mku < handle
-%MKU Defines a class that interfaces with the Kuhne MKU PLL synthesizer via
-%a NodeMCU module
-%
-% M = MKU(F1,F2) with optional arguments F1 and F2 sets the internal
-% properties F1 and F2 to their respective values.  These are the output
-% frequencies of the MKU.  To write to the device, use the WRITEF1 and
-% WRITEF2 methods
+    %MKU Class definition for handling the control of the MKU PLL
+    %synthesizer via an ESP8266 WiFi micro-controller
+    %
+    properties(SetAccess = protected)
+        conn    %TCPIP object handling the connection
+        timeout %Timeout for reading data
+    end
+    
     properties
-        f1      %Frequency 1, output when SW1 is open or high
-        f2      %Frequency 2, output when SW1 is closed or low
-        msg     %Message returned from NodeMCU interface
+        host    %IP address of ESP8266 WiFi server
+        port    %Port to connect to
+        f1      %F1 frequency in Hz
+        f2      %F2 frequency in Hz
     end
     
     properties(Constant)
-        uri = 'http://172.22.251.245/mku/'  %URI for the MKU
+        DEFAULT_HOST = '192.168.1.33';
+        DEFAULT_PORT = 6666;
+        DEFAULT_TIMEOUT = 1;
     end
     
     methods
-        function obj = mku(f1,f2)
+        function self = mku(host,port)
+            %MKU Creates the MKU object.
+            %
+            %   SELF = MKU() Creates MKU with default host name and port
+            %   number
+            %
+            %   SELF = MKU(HOST) Creates MKU with given host name and
+            %   default port number
+            %
+            %   SELF = MKU(HOST,PORT) Creates MKU with given host name and
+            %   port number
+            %
+            self.host = self.DEFAULT_HOST;
+            self.port = self.DEFAULT_PORT;
+            self.timeout = self.DEFAULT_TIMEOUT;
             if nargin == 1
-                mku.setf1(f1);
+                self.host = host;
             elseif nargin == 2
-                mku.setf1(f1);
-                mku.setf2(f2);
+                self.host = host;
+                self.port = port;
             end
         end
         
-        %SETF1 Sets the internal frequency F1 to the desired value
-        %
-        %OBJ = SETF1(F) Sets the internal frequency F1 to f
-        function obj = setf1(obj,f)
-            obj.check(f);
-            obj.f1 = f;
+        function self = setTimeout(self,timeout)
+            %SETTIMEOUT Sets the timeout for reading data from the ESP8266
+            %device
+            %
+            %   SELF = MKU.SETTIMEOUT(TIMEOUT) Sets the timeout to TIMEOUT,
+            %   in seconds
+            %
+            self.timeout = timeout;
         end
         
-        %SETF2 Sets the internal frequency F2 to the desired value
-        %
-        %OBJ = SETF2(F) Sets the internal frequency F2 to f
-        function obj = setf2(obj,f)
-            obj.check(f);
-            obj.f2 = f;
+        function self = open(self)
+            %OPEN Opens a connection to the host
+            r = instrfindall('RemoteHost',self.host,'RemotePort',self.port);
+            if isempty(r)
+                %
+                % If no connections exist, create that connection
+                %
+                self.conn = tcpip(self.host,self.port);
+                self.conn.InputBufferSize = 2^24;
+                self.conn.OutputBufferSize = 2^24;
+                fopen(self.conn);
+            elseif strcmpi(r.Status,'closed')
+                %
+                % If a connection exists but it is closed, set the buffer
+                % size correctly and then open it
+                %
+                self.conn = r;
+                self.conn.InputBufferSize = 2^24;
+                self.conn.OutputBufferSize = 2^24;
+                fopen(self.conn);
+            else
+                %
+                % Otherwise set the client parameter to that connection
+                %
+                self.conn = r;
+            end
         end
         
-        %WRITEF1 Writes internal frequency F1 to the MKU
-        %
-        %OBJ = WRITEF1() Writes internal frequency F1 to the MKU
-        function obj = writef1(obj)
-            obj.check(obj.f1);
-            q = obj.format(obj.f1);
-            r = webread([obj.uri,'F1'],q{:});
-            obj.msg = jsondecode(r);
+        function self = close(self)
+            %CLOSE Closes the connection to the host
+            if ~isempty(self.conn) && isvalid(self.conn) && strcmpi(self.conn.Status,'open')
+                fclose(self.conn);
+            end
+            delete(self.conn);
+            self.conn = [];
         end
         
-        %WRITEF2 Writes internal frequency F2 to the MKU
-        %
-        %OBJ = WRITEF2() Writes internal frequency F2 to the MKU
-        function obj = writef2(obj)
-            obj.check(obj.f2);
-            q = obj.format(obj.f2);
-            r = webread([obj.uri,'F2'],q{:});
-            obj.msg = jsondecode(r);
+        function delete(self)
+            %DELETE Deletes the current object. Closes the connection first
+            try
+                self.close;
+            catch
+                disp('Error deleting client');
+            end
         end
+        
+        function r = cmd(self,cmd)
+            %CMD Writes a command to the device and returns the response
+            %
+            %   R = MKU.CMD(CMD) Writes the command CMD (a character
+            %   vector) and returns the response R (a character vector)
+            %
+            self.open;
+            fprintf(self.conn,cmd);
+            pause(10e-3);
+            jj = 1;
+            while ~self.conn.BytesAvailable
+                pause(10e-3);
+                if jj > floor(self.timeout/10e-3)
+                    error('Timeout reading data');
+                end
+                jj = jj + 1;
+            end
+            pause(100e-3);
+            r = char(fread(self.conn,self.conn.BytesAvailable))';
+            self.close;
+        end
+        
+        function self = set(self,f1,f2)
+            if nargin == 2
+                if numel(f1) == 1
+                    self.f1 = f1;
+                elseif numel(f1) == 2
+                    self.f1 = f1(1);
+                    self.f2 = f1(2);
+                end
+            elseif nargin == 3
+                self.f1 = f1;
+                self.f2 = f2;
+            end
+        end
+        
+        function r = status(self)
+            r = self.cmd('sa');
+        end
+        
+        function self = writeList(self,varargin)
+            self.set(varargin{:});
+            self.check(self.f1);
+            self.check(self.f2);
+            
+            r = self.cmd(self.parseFreq(self.f1,1));
+            if any(r == 'N')
+                error('Error writing frequency 1: %s',strrep(r,newline,''));
+            end
+            r = self.cmd(self.parseFreq(self.f2,2));
+            if any(r == 'N')
+                error('Error writing frequency 2: %s',strrep(r,newline,''));
+            end
+        end
+        
         
     end
     
     methods(Static)
-        %CHECK Checks that the frequency is in the right range
-        %
-        %CHECK(F) Checks that F is within the MKU range of [54,6850] MHz
-        %or [8,13] GHz
+        function s = parseFreq(f,ch)
+            if nargin < 2
+                ch = 1;
+            elseif ch ~= 1 && ch ~= 2
+                error('Channel can only be 1 or 2')
+            end
+                
+            fG = floor(f/1e9);
+            fM = floor((f - fG*1e9)/1e6);
+            fK = floor((f - fG*1e9 - fM*1e6)/1e3);
+            fH = floor((f - fG*1e9 - fM*1e6 - fK*1e3));
+            s = sprintf('%03dGF%d%03dMF%d%03dkF%d%03dHF%d',fG,ch,fM,ch,fK,ch,fH,ch);
+        end
+        
         function check(f)
-            if (f<54 || f>6850) && (f<8e3 || f>13e3)
+            if (f < 54e6 || f > 6850e6) && (f < 8e9 || f > 13e9)
                 error('Frequency must be between [54,6850] MHz (Aux) or [8,13] GHz (Main)');
             end
         end
-        
-        %FORMAT Converts a frequency to a cell array of arguments
-        %
-        %S = FORMAT(F) Converts frequency F to a cell array of values that
-        %can be interpreted by the NodeMCU firmware and is easily written
-        %to the device using the WEBREAD MATLAB function
-        function s = format(f)
-            G = floor(f/1e3);
-            M = floor((f-G*1e3));
-            k = floor((f-G*1e3-M)*1e3);
-            H = floor((f-G*1e3-M-k*1e-3)*1e6);
-            s = {'G',sprintf('%03d',G),...
-                                'M',sprintf('%03d',M),...
-                                'k',sprintf('%03d',k),...
-                                'H',sprintf('%03d',H)};
-        end
-        
     end
-    
 end
+

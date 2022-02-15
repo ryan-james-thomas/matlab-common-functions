@@ -81,6 +81,17 @@ classdef nonlinfit < FitClass
             
         end
         
+        function r = get(self,p)
+            anoninputs = strsplit(regexp(func2str(self.func), '(?<=^@\()[^\)]*', 'match', 'once'), ',');
+            N = numel(anoninputs) - 1;
+            anoninputs = anoninputs(1:N);
+            for nn = 1:N
+                if strcmp(p,anoninputs{nn})
+                    r = self.c(nn,:);
+                end
+            end
+        end
+        
         function print(obj)
             %PRINT Prints the fit results with the bounds and guess
             obj.bounds;
@@ -180,7 +191,31 @@ classdef nonlinfit < FitClass
             err = sqrt(diag(dfdc*obj.Vcov*dfdc'));
         end
         
+        function s = struct(self)
+            s = struct@FitClass(self);
+            s.lower = self.lower;
+            s.upper = self.upper;
+            s.guess = self.guess;
+        end
+        
     
+    end
+    
+    methods(Static)
+        function s = loadobj(a)
+            %LOADOBJ Converts structure into class
+            s = nonlinfit(a.x,a.y,a.dy,a.ex);
+            s.func = a.func;
+            s.useErr = a.useErr;
+            s.c = a.c;
+            s.Vcov = a.Vcov;
+            s.Vcorr = a.Vcorr;
+            s.res = a.res;
+            s.gof = a.gof;
+            s.lower = a.lower;
+            s.upper = a.upper;
+            s.guess = a.guess;
+        end
     end
     
 end

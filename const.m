@@ -24,25 +24,48 @@ classdef const < handle
         
         g=9.81;
         G = 6.67e-11;
+        tide = 1.57e-7*9.81;
         
         %%Rubidium associated "constant"
-        f_Rb_groundHFS=6.834e9; %hyperfine splitting between the ground states
-        k_Rb_groundHFS=0;
-        %wavevector tranistion from gound state to excited state
-        k_Rb_F1_to_F0=0;
-        k_Rb_F1_to_F1=0;
-        k_Rb_F1_to_F2=384.234683e12*2*pi/299792458;
-        k_Rb_F2_to_F1=0;
-        k_Rb_F2_to_F2=0;
-        k_Rb_F2_to_F3=0;
-        %frequency transition from ground state to excited state
-        f_Rb_F1_to_F0=0;
-        f_Rb_F1_to_F1=0;
-        f_Rb_F1_to_F2=0;
-        f_Rb_F2_to_F1=0;
-        f_Rb_Rb_F2_to_F2=0;
-        f_Rb_F2_to_F3=0;
+        f_Rb_groundHFS = 6834.682610904e6; %hyperfine splitting between the ground states  for Rb87
+        k_Rb_groundHFS = 2*pi*6834.682610904e6/299792458;
+        %wavevector tranistion from gound state to excited state  for Rb87
+        k_Rb_F1_F0 = 2*pi*3.842344540713058e14/299792458;
+        k_Rb_F1_F1 = 2*pi*3.842345262933378e14/299792458;
+        k_Rb_F1_F2 = 2*pi*3.842346832338618e14/299792458;
         
+        k_Rb_F2_F1 = 2*pi*3.842276976107269e14/299792458;
+        k_Rb_F2_F2 = 2*pi*3.842278485512509e14/299792458;
+        k_Rb_F2_F3 = 2*pi*3.842281152034289e14/299792458;
+        %frequency transition from ground state to excited state  for Rb87
+        f_Rb_F1_F0 = 3.842344540713058e14;
+        f_Rb_F1_F1 = 3.842345262933378e14;
+        f_Rb_F1_F2 = 3.842346832338618e14;
+        
+        f_Rb_F2_F1 = 3.842276976107269e14;
+        f_Rb_F2_F2 = 3.842278485512509e14;
+        f_Rb_F2_F3 = 3.842281152034289e14;
+        
+       %wavevector tranistion from gound state to excited state for Rb85
+      k_Rb85_F3_F2 = 2*pi*384.2290576492837e12/299792458 ;
+      k_Rb85_F3_F3 = 2*pi*384.2291210491137e12/299792458 ;
+      k_Rb85_F3_F4 = 2*pi*384.2292416894837e12/299792458;
+      
+      k_Rb85_F2_F3 = 2*pi*384.2321567815528e12/299792458 ;
+      k_Rb85_F2_F2 = 2*pi*384.2320933817228e12/299792458 ;
+      k_Rb85_F2_F1 = 2*pi*384.2320640082228e12/299792458 ;
+       %frequency transition from ground state to excited state  for Rb85
+        f_Rb85_F3_F4 =384.2292416894837e12;
+        f_Rb85_F3_F3 =384.2291210491137e12;
+        f_Rb85_F3_F2 =384.2290576492837e12;
+        
+        f_Rb85_F2_F1 = 384.2320640082228e12;
+        f_Rb85_F2_F2 =384.2320933817228e12;
+        f_Rb85_F2_F3 = 384.2321567815528e12;
+        %hyperfine splitting between the ground states  for Rb87
+        f_Rb85_groundHFS=3035.732439060e6; 
+        k_Rb85_groundHFS=2*pi*3035.732439060e6/299792458;
+
     end
     
     methods(Static)

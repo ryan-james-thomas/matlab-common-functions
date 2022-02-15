@@ -68,7 +68,7 @@ classdef nonlinfit < FitClass
             N = numel(anoninputs) - 1;
             anoninputs = anoninputs(1:N);
             
-            [self.lower,self.upper,self.guess] = deal(NaN(1,N));
+%             [self.lower,self.upper,self.guess] = deal(NaN(1,N));
             for nn = 1:numel(anoninputs)
                 for mm = 1:2:numel(varargin)
                     if strcmp(varargin{mm},anoninputs{nn})

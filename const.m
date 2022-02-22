@@ -158,7 +158,7 @@ classdef const < handle
             Y = fft(data,[],1);
             Y = Y(1:floor(N/2),:);
             Y(1,:) = Y(1,:)/N;
-            Y(2:end,:) = 2*Y(2:end,:)/N;
+            Y(2:end,:) = Y(2:end,:)/N;
         end
         
         function y = smooth(data,sm)

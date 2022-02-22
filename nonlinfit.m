@@ -81,13 +81,16 @@ classdef nonlinfit < FitClass
             
         end
         
-        function r = get(self,p)
+        function r = get(self,p,idx)
+            if nargin < 3
+                idx = 1:2;
+            end
             anoninputs = strsplit(regexp(func2str(self.func), '(?<=^@\()[^\)]*', 'match', 'once'), ',');
             N = numel(anoninputs) - 1;
             anoninputs = anoninputs(1:N);
             for nn = 1:N
                 if strcmp(p,anoninputs{nn})
-                    r = self.c(nn,:);
+                    r = self.c(nn,idx);
                 end
             end
         end

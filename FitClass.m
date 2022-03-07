@@ -248,7 +248,7 @@ classdef FitClass < handle
     methods(Static)
         function s = loadobj(a)
             %LOADOBJ Converts structure into class
-            s = linfit(a.x,a.y,a.dy,a.ex);
+            s = FitClass(a.x,a.y,a.dy,a.ex);
             s.func = a.func;
             s.useErr = a.useErr;
             s.c = a.c;

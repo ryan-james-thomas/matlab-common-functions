@@ -114,7 +114,7 @@ classdef odt < handle
                 wy = wx;
             end
             obj.checkInputs(P,wx,wy);
-            f = (1./(2*pi)).*sqrt(4*obj.a.*obj.wavelength.^2.*obj.P./(pi^2*obj.mass.*obj.wx.^3*obj.wy^3));
+            f = (1./(2*pi)).*sqrt(4*obj.a.*obj.wavelength.^2.*obj.P./(pi^3*obj.mass.*obj.wx.^3*obj.wy^3));
         end
         
         function D = depth(obj,P,wx,wy)

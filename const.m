@@ -72,7 +72,7 @@ classdef const < handle
             Pmax = max(f(xx));
             x = [];
             while numel(x)<Nsamples
-                xTest = (inputRange(2)-inputRange(1))*rand(Nsamples,1)-inputRange(1);
+                xTest = (inputRange(2)-inputRange(1))*rand(Nsamples,1) + inputRange(1);
                 r = Pmax.*rand(Nsamples,1);
                 x = [x;xTest(r<f(xTest))];  %#ok
             end

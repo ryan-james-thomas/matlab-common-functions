@@ -90,16 +90,50 @@ classdef const < handle
             [~,reverseKey] = sort(k);
         end
         
-        function x = rejectionSample(f,inputRange,Nsamples)
-            xx = linspace(inputRange(1),inputRange(2),1e3);
-            Pmax = max(f(xx));
-            x = [];
-            while numel(x)<Nsamples
-                xTest = (inputRange(2)-inputRange(1))*rand(Nsamples,1) + inputRange(1);
-                r = Pmax.*rand(Nsamples,1);
-                x = [x;xTest(r<f(xTest))];  %#ok
+        function r = rejectionSample(f,inputRange,Nsamples,Pmax)
+            function_inputs = strsplit(regexp(func2str(f), '(?<=^@\()[^\)]*', 'match', 'once'), ',');
+            if numel(function_inputs) == 1
+                if nargin < 4
+                    rr = linspace(inputRange(1),inputRange(2),1e3);
+                    Pmax = max(f(rr));
+                end
+                r = [];
+                while numel(r) < Nsamples
+                    rTest = (inputRange(2)-inputRange(1))*rand(Nsamples,1) + inputRange(1);
+                    rr = Pmax.*rand(Nsamples,1);
+                    r = [r;rTest(rr<f(rTest))];  %#ok
+                end
+                r = r(1:Nsamples);
+            else
+                num_inputs = numel(function_inputs);
+                if nargin < 4
+                    rr = zeros(num_inputs,1e2);
+                    for nn = 1:num_inputs
+                        rr(nn,:) = linspace(inputRange(nn,1),inputRange(nn,2),1e2);
+                    end
+                    if num_inputs == 2
+                        [X,Y] = meshgrid(rr(1,:),rr(2,:));
+                        f_val = f(X,Y);
+                        Pmax = max(f_val(:));
+                    elseif num_inputs == 3
+                        [X,Y,Z] = meshgrid(rr(1,:),rr(2,:),rr(3,:));
+                        f_val = f(X,Y,Z);
+                        Pmax = max(f_val(:));
+                    end
+                end
+                r = zeros(0,num_inputs);
+                while size(r,1) < Nsamples
+                    rTest = (inputRange(:,2) - inputRange(:,1))'.*rand(Nsamples,num_inputs) + inputRange(:,1)';
+                    rr = Pmax.*rand(Nsamples,num_inputs);
+                    if num_inputs == 2
+                        rnew = rTest(all(rr < f(rTest(:,1),rTest(:,2)),2),:);
+                        r = [r;rnew];  %#ok
+                    elseif num_inputs == 3
+                        r = [r;rTest(all(rr < f(rTest(:,1),rTest(:,2),rTest(:,3)),2),:)];  %#ok
+                    end
+                end
+                r = r(1:Nsamples,:);
             end
-            x = x(1:Nsamples);
         end
         
         function plotfft(data,dt,sm,plotType)

@@ -42,12 +42,12 @@ classdef gaussian_beam < handle
             if nargin > 4
                 self.set_rotations(rotation_angles)
             else
-                self.set_rotations(0);
+                self.set_rotations('x',0);
             end
             
         end
         
-        function self = set_rotations(self,rotation_angles)
+        function self = set_rotations_old(self,rotation_angles)
             self.rotation_angles = rotation_angles;
             if numel(self.rotation_angles) == 1
                 th = self.rotation_angles(1);
@@ -78,6 +78,38 @@ classdef gaussian_beam < handle
                       0,    cosd(th),   sind(th);
                       0,    -sind(th),  cosd(th)];
                 self.rotation_matrix = R3*R2*R1;
+            end
+        end
+        
+        function self = set_rotations(self,varargin)
+            if mod(numel(varargin),2) ~= 0
+                error('Arguments must be in name/value pairs!');
+            end
+            
+            Rx = @(th) [1,    0,      0;
+                        0,    cosd(th),   sind(th);
+                        0,    -sind(th),  cosd(th)];
+            Ry = @(th) [cosd(th), 0, sind(th);
+                        0,  1,  0;
+                        -sind(th),  0,  cosd(th)];
+            Rz = @(th) [cosd(th),     sind(th),   0;
+                        -sind(th),    cosd(th),   0;
+                        0,            0,          1];
+            
+            self.rotation_matrix = eye(3);
+            for nn = 1:2:numel(varargin)
+                direction = varargin{nn};
+                th = varargin{nn + 1};
+                switch lower(direction)
+                    case 'x'
+                        self.rotation_matrix = Rx(th)*self.rotation_matrix;
+                    case 'y'
+                        self.rotation_matrix = Ry(th)*self.rotation_matrix;
+                    case 'z'
+                        self.rotation_matrix = Rz(th)*self.rotation_matrix;
+                    otherwise
+                        error('Direction can only be x, y, or z');
+                end
             end
         end
         
@@ -123,6 +155,22 @@ classdef gaussian_beam < handle
             Fx_lab = R(1,1)*Fx_body + R(1,2)*Fy_body + R(1,3)*Fz_body;
             Fy_lab = R(2,1)*Fx_body + R(2,2)*Fy_body + R(2,3)*Fz_body;
             Fz_lab = R(3,1)*Fx_body + R(3,2)*Fy_body + R(3,3)*Fz_body;
+        end
+        
+        function isosurface(self,X,Y,Z,isovalue)
+            I = self.intensity(X,Y,Z);
+            fv = isosurface(X,Y,Z,I,isovalue);
+            p = patch(fv);
+            isonormals(X,Y,Z,I,p);
+            p.FaceColor = 'red';
+            p.EdgeColor = 'none';
+            daspect([1,1,1]);
+            view(3);
+            axis tight;
+            camlight;
+            xlabel('X');
+            ylabel('Y');
+            zlabel('Z');
         end
         
     end

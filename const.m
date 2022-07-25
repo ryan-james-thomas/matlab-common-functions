@@ -298,6 +298,28 @@ classdef const < handle
 %                 end
             end
         end
+        
+        function R = compute_tf_radii(real_trap_freqs,num_atoms,scattering_length,atom_mass)
+            f = 2*pi*real_trap_freqs;
+            fmean = prod(f)^(1/3);
+            U0 = 4*pi*const.hbar^2*scattering_length/atom_mass;
+            chemical_potential = (15*num_atoms*U0/(8*pi))^(2/5)*(atom_mass*fmean^2/2)^(3/5);
+
+            R = sqrt(2*chemical_potential./(atom_mass*f.^2));
+        end
+        
+        function y = sinc(x)
+            if numel(x) == 1
+                if x == 0
+                    y = 1;
+                else
+                    y = sin(x)/x;
+                end
+            else
+                y = sin(x)./x;
+                y(x == 0) = 1;
+            end
+        end
     end
     
     

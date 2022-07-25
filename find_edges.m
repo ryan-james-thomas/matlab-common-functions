@@ -10,6 +10,7 @@ function [edges,edge_times] = find_edges(t,data,threshold,hysteresis)
 %   the size of DATA.  Also returns EDGE_TIMES, which is a vector
 %   containing the times of edges.
 armed = true;
+last_edge = 0;
 data = data - threshold;
 edges = zeros(size(data));
 edge_times = [];
@@ -17,15 +18,17 @@ mm = 1;
 for nn = 2:numel(data)
     if armed && data(nn) > 0 && data(nn - 1) < 0
         edges(nn) = 1;
+        last_edge = 1;
         edge_times(mm) = (data(nn)*t(nn-1) - data(nn-1)*t(nn))/(data(nn) - data(nn-1));
         mm = mm + 1;
         armed = false;
     elseif armed && data(nn) < 0 && data(nn - 1) > 0
         edges(nn) = -1;
+        last_edge = -1;
         edge_times(mm) = (data(nn)*t(nn-1) - data(nn-1)*t(nn))/(data(nn) - data(nn-1));
         mm = mm + 1;
         armed = false;
-    elseif data(nn) > hysteresis || data(nn) < hysteresis
+    elseif (data(nn) > hysteresis && last_edge == 1) || (data(nn) < hysteresis && last_edge == -1)
         armed = true;
     end
     

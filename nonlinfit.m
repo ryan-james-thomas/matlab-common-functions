@@ -39,7 +39,7 @@ classdef nonlinfit < FitClass
             else
                 if ~isempty(obj.func) && isa(obj.func,'function_handle')
                     anoninputs = strsplit(regexp(func2str(obj.func), '(?<=^@\()[^\)]*', 'match', 'once'), ',');
-                    fprintf(1,'Arguments:\t');
+                    fprintf(1,'Arguments:');
                     for nn = 1:(numel(anoninputs)-1)
                         fprintf(1,'\t%10s',anoninputs{nn});
                     end
@@ -49,10 +49,10 @@ classdef nonlinfit < FitClass
                 fprintf(1,'\t%10.4g',obj.lower);
                 fprintf(1,'\n');
                 fprintf(1,'Upper bounds:');
-                fprintf(1,'\t%10.4g',obj.upper);
+                fprintf(1,'\t% 10.4g',obj.upper);
                 fprintf(1,'\n');
-                fprintf(1,'Guess:\t\t');
-                fprintf(1,'\t%10.4g',obj.guess);
+                fprintf(1,'Guess:\t');
+                fprintf(1,'\t% 10.4g',obj.guess);
                 fprintf(1,'\n');
             end
         end
@@ -98,7 +98,7 @@ classdef nonlinfit < FitClass
         function print(obj)
             %PRINT Prints the fit results with the bounds and guess
             obj.bounds;
-            fprintf(1,'Results:\t');
+            fprintf(1,'Results:');
             fprintf(1,'\t%10.4g',obj.c(:,1));
             fprintf(1,'\n');
         end

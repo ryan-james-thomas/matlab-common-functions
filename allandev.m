@@ -107,6 +107,13 @@ classdef allandev
             [acov,tau] = allandev.covariance(y1,y2,varargin{:});
             acorr = acov./(adev1.*adev2);
         end
+        
+        function plot(y,varargin)
+            [adev,tau] = allandev.overlap(y,varargin{:});
+            loglog(tau,adev,'o-');
+            hold on
+            xlabel('Sample');
+        end
     end
 
 end

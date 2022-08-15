@@ -224,6 +224,18 @@ classdef const < handle
             F = (1 + (f*width).^(2*order)).^-1;
             y = real(ifft(ifftshift(Y.*F)));
         end
+
+        function y = butterworth2D(data,width,order)
+            if nargin < 3
+                order = 4;
+            end
+            Y = fftshift(fft2(data));
+            kx = linspace(-0.5,0.5,size(data,2));
+            ky = linspace(-0.5,0.5,size(data,1));
+            [KX,KY] = meshgrid(kx,ky);
+            F = 1./(1 + (width^2*(KX.^2 + KY.^2)).^order);
+            y = real(ifft2(ifftshift(F.*Y)));
+        end
         
         function [P,f] = calcPSD(data,dt,varargin)
             %CALCPSD Calculates the one-sided power spectral density and

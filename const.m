@@ -311,12 +311,12 @@ classdef const < handle
             end
         end
         
-        function R = compute_tf_radii(real_trap_freqs,num_atoms,scattering_length,atom_mass)
+        function [n3D,R] = bec_properties(real_trap_freqs,num_atoms,scattering_length,atom_mass)
             f = 2*pi*real_trap_freqs;
             fmean = prod(f)^(1/3);
             U0 = 4*pi*const.hbar^2*scattering_length/atom_mass;
             chemical_potential = (15*num_atoms*U0/(8*pi))^(2/5)*(atom_mass*fmean^2/2)^(3/5);
-
+            n3D = chemical_potential/U0;
             R = sqrt(2*chemical_potential./(atom_mass*f.^2));
         end
         

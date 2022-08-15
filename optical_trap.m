@@ -30,6 +30,10 @@ classdef optical_trap < handle
             if nargin > 1 && isa(lasers,'gaussian_beam')
                 self.lasers = lasers;
             end
+
+            self.ext_force.Fx = @(x,y,z) 0;
+            self.ext_force.Fy = @(x,y,z) 0;
+            self.ext_force.Fz = @(x,y,z) 0;
                 
         end
 
@@ -47,7 +51,6 @@ classdef optical_trap < handle
             for nn = 1:numel(self.lasers)
                 U = U - self.scale(self.lasers(nn).wavelength,self.atom_type)*self.lasers(nn).intensity(x,y,z);
             end
-            
         end
         
         function [Fx,Fy,Fz] = force(self,x,y,z,opt)
@@ -101,7 +104,15 @@ classdef optical_trap < handle
             end
             
             [V,D] = eig(K);
-            f = sqrt(diag(D)/const.mRb)/(2*pi);
+            ftmp = sqrt(diag(D)/const.mRb)/(2*pi);
+            f = zeros(size(ftmp));
+            idx = zeros(size(ftmp));
+            for nn = 1:numel(f)
+                [~,idx(nn)] = max(abs(V(:,nn).^2));
+                f(idx(nn)) = ftmp(nn);
+            end
+            V = V(:,idx);
+
         end
         
         function r0 = find_zero(self,x,y,z,force_output)

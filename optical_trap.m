@@ -105,12 +105,8 @@ classdef optical_trap < handle
             
             [V,D] = eig(K);
             ftmp = sqrt(diag(D)/const.mRb)/(2*pi);
-            f = zeros(size(ftmp));
-            idx = zeros(size(ftmp));
-            for nn = 1:numel(f)
-                [~,idx(nn)] = max(abs(V(:,nn).^2));
-                f(idx(nn)) = ftmp(nn);
-            end
+            [~,idx] = max(abs(inv(V).^2),[],1);
+            f(idx) = ftmp;
             V = V(:,idx);
 
         end

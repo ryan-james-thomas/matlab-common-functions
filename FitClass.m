@@ -134,19 +134,23 @@ classdef FitClass < handle
                 end
             end
             Nplot = 1e3;
-            xExt = 0.1*range(obj.x(~obj.ex));
-            xMin = min(obj.x(~obj.ex));
-            xMax = max(obj.x(~obj.ex));
-            if includeZero
-                if xMin > 0
-                    xplot = linspace(0,xMax+xExt,Nplot);
-                elseif xMax < 0
-                    xplot = linspace(xMin-xExt,0,Nplot);
+            if Nplot > numel(obj.x)
+                xExt = 0.1*range(obj.x(~obj.ex));
+                xMin = min(obj.x(~obj.ex));
+                xMax = max(obj.x(~obj.ex));
+                if includeZero
+                    if xMin > 0
+                        xplot = linspace(0,xMax+xExt,Nplot);
+                    elseif xMax < 0
+                        xplot = linspace(xMin-xExt,0,Nplot);
+                    else
+                        xplot = linspace(xMin-xExt,xMax+xExt,Nplot);
+                    end
                 else
                     xplot = linspace(xMin-xExt,xMax+xExt,Nplot);
                 end
             else
-                xplot = linspace(xMin-xExt,xMax+xExt,Nplot);
+                xplot = obj.x(~obj.ex);
             end
             xplot = xplot(:);
             yplot = obj.f(xplot);

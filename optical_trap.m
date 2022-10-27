@@ -171,17 +171,23 @@ classdef optical_trap < handle
                     D = trapz(xx,self.force(r0(1),xx,r0(3),'y'));
 
                 case 'z'
-                    F = self.force(r0(1),r0(2),r0(3) + [0,1e-7],'z');
-                    if diff(F) > 0
+                    F = self.force(r0(1),r0(2),r0(3) + [-1e-7,0,1e-7],'z');
+                    if (mean(diff(F)) > 0 && diff(F,2) > 0) || (mean(diff(F)) < 0 && diff(F,2) < 0)
+                        xs = r0(3) - 1e-7;
+                        result = search_for_zero(@(x) self.force(r0(1),r0(2),x,'z'),xs,-5e-3,dr);
+                    elseif (mean(diff(F)) > 0 && diff(F,2) < 0) || (mean(diff(F)) < 0 && diff(F,2) > 0)
                         xs = r0(3) + 1e-7;
                         result = search_for_zero(@(x) self.force(r0(1),r0(2),x,'z'),xs,5e-3,dr);
                     else
-                        xs = r0(3) - 1e-7;
-                        result = search_for_zero(@(x) self.force(r0(1),r0(2),x,'z'),xs,-5e-3,dr);
+                        result = [];
                     end
-                    r1(3) = result;
-                    xx = linspace(r0(3),r1(3),1e2);
-                    D = trapz(xx,self.force(r0(1),r0(2),xx,'z'));
+                    if isempty(result)
+                        D = 0;
+                    else
+                        r1(3) = result;
+                        xx = linspace(r0(3),r1(3),1e2);
+                        D = trapz(xx,self.force(r0(1),r0(2),xx,'z'));
+                    end
 
             end
 
@@ -232,7 +238,7 @@ function r = search_for_zero(func,xs,xmax,dx)
         xs = x0;
         x0 = x0 + dx;
         if abs(x0) > abs(xmax)
-            r = xmax;
+            r = [];
             return;
         end
     end

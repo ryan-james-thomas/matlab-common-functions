@@ -105,12 +105,8 @@ classdef optical_trap < handle
             
             [V,D] = eig(K);
             ftmp = sqrt(diag(D)/const.mRb)/(2*pi);
-            f = zeros(size(ftmp));
-            idx = zeros(size(ftmp));
-            for nn = 1:numel(f)
-                [~,idx(nn)] = max(abs(V(:,nn).^2));
-                f(idx(nn)) = ftmp(nn);
-            end
+            [~,idx] = max(abs(inv(V).^2),[],1);
+            f(idx) = ftmp;
             V = V(:,idx);
 
         end
@@ -145,30 +141,44 @@ classdef optical_trap < handle
             dr = 10e-6;
             switch lower(direction)
                 case 'x'
-                    F = self.force(r0(1) + [0,1e-7],r0(2),r0(3));
-                    if diff(F) > 0
+                    F = self.force(r0(1) + [-1e-7,0,1e-7],r0(2),r0(3));
+                    if (mean(diff(F)) > 0 && diff(F,2) > 0) || (mean(diff(F)) < 0 && diff(F,2) < 0)
+                        xs = r0(1) - 1e-7;
+                        result = search_for_zero(@(x) self.force(x,r0(2),r0(3),'x'),xs,-5e-3,dr);
+                    elseif (mean(diff(F)) > 0 && diff(F,2) < 0) || (mean(diff(F)) < 0 && diff(F,2) > 0)
                         xs = r0(1) + 1e-7;
                         result = search_for_zero(@(x) self.force(x,r0(2),r0(3),'x'),xs,5e-3,dr);
                     else
-                        xs = r0(1) - 1e-7;
-                        result = search_for_zero(@(x) self.force(x,r0(2),r0(3),'x'),xs,-5e-3,dr);
+                        result = [];
                     end
-                    r1(1) = result;
-                    xx = linspace(r0(1),r1(1),1e2);
-                    D = trapz(xx,self.force(xx,r0(2),r0(3),'x'));
+
+                    if isempty(result)
+                        D = 0;
+                    else
+                        r1(1) = result;
+                        xx = linspace(r0(1),r1(1),1e2);
+                        D = -trapz(xx,self.force(xx,r0(2),r0(3),'x'));
+                    end
 
                 case 'y'
-                    F = self.force(r0(1),r0(2) + [0,1e-7],r0(3),'y');
-                    if diff(F) > 0
+                    F = self.force(r0(1),r0(2) + [-1e-7,0,1e-7],r0(3),'y');
+                    if (mean(diff(F)) > 0 && diff(F,2) > 0) || (mean(diff(F)) < 0 && diff(F,2) < 0)
+                        xs = r0(2) - 1e-7;
+                        result = search_for_zero(@(x) self.force(r0(1),x,r0(3),'y'),xs,-5e-3,dr);
+                    elseif (mean(diff(F)) > 0 && diff(F,2) < 0) || (mean(diff(F)) < 0 && diff(F,2) > 0)
                         xs = r0(2) + 1e-7;
                         result = search_for_zero(@(x) self.force(r0(1),x,r0(3),'y'),xs,5e-3,dr);
                     else
-                        xs = r0(2) - 1e-7;
-                        result = search_for_zero(@(x) self.force(r0(1),x,r0(3),'y'),xs,-5e-3,dr);
+                        result = [];
                     end
-                    r1(2) = result;
-                    xx = linspace(r0(2),r1(2),1e2);
-                    D = trapz(xx,self.force(r0(1),xx,r0(3),'y'));
+
+                    if isempty(result)
+                        D = 0;
+                    else
+                        r1(2) = result;
+                        xx = linspace(r0(2),r1(2),1e2);
+                        D = -trapz(xx,self.force(r0(1),xx,r0(3),'y'));
+                    end
 
                 case 'z'
                     F = self.force(r0(1),r0(2),r0(3) + [-1e-7,0,1e-7],'z');
@@ -181,14 +191,14 @@ classdef optical_trap < handle
                     else
                         result = [];
                     end
+
                     if isempty(result)
                         D = 0;
                     else
                         r1(3) = result;
                         xx = linspace(r0(3),r1(3),1e2);
-                        D = trapz(xx,self.force(r0(1),r0(2),xx,'z'));
+                        D = -trapz(xx,self.force(r0(1),r0(2),xx,'z'));
                     end
-
             end
 
         end

@@ -219,6 +219,15 @@ classdef nonlinfit < FitClass
             s.upper = a.upper;
             s.guess = a.guess;
         end
+
+        function nlf = make_gauss_fit(varargin)
+            nlf = nonlinfit(varargin{:});
+            nlf.setFitFunc(@(A,w,x0,x) A*exp(-(x - x0).^2/(2*w^2)));
+            [m,idx] = max(nlf.y);
+            [xx,k] = sort(nlf.x);yy = nlf.y(k);
+            idx2 = find(yy >= m*exp(-0.5),1,'first');
+            nlf.bounds2('A',[0,2*m,m],'w',[0,0.25*range(nlf.x),abs(nlf.x(idx) - xx(idx2))],'x0',[min(nlf.x),max(nlf.x),nlf.x(idx)]);
+        end
     end
     
 end

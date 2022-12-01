@@ -152,7 +152,7 @@ classdef odt < handle
     end
     
     methods(Static)
-        function a=scale(wavelength,atomType)
+        function [a,b] = scale(wavelength,atomType)
             if strcmpi(atomType,'Rb87')
                 atom = odt.Rb87;
             elseif strcmpi(atomType,'K40')
@@ -162,9 +162,11 @@ classdef odt < handle
             end
             w = 2*pi*const.c/wavelength;
             a = 0;
+            b = 0;
             for nn=1:numel(atom)
                 w0 = 2*pi*const.c/atom(nn).wavelength;
                 a = a + (2*atom(nn).J+1)/2*pi*const.c^2/(2*w0.^3).*atom(nn).decay.*((w0+w).^(-1)+(w0-w).^(-1));
+                b = b + (2*atom(nn).J+1)/2*pi*const.c^2/(2*w0.^3).*atom(nn).decay^2.*((w0+w).^(-2)+(w0-w).^(-2));
             end
         end
     end

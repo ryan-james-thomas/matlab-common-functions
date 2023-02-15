@@ -56,38 +56,13 @@ classdef mku < handle
         
         function self = open(self)
             %OPEN Opens a connection to the host
-            r = instrfindall('RemoteHost',self.host,'RemotePort',self.port);
-            if isempty(r)
-                %
-                % If no connections exist, create that connection
-                %
-                self.conn = tcpip(self.host,self.port);
-                self.conn.InputBufferSize = 2^24;
-                self.conn.OutputBufferSize = 2^24;
-                fopen(self.conn);
-            elseif strcmpi(r.Status,'closed')
-                %
-                % If a connection exists but it is closed, set the buffer
-                % size correctly and then open it
-                %
-                self.conn = r;
-                self.conn.InputBufferSize = 2^24;
-                self.conn.OutputBufferSize = 2^24;
-                fopen(self.conn);
-            else
-                %
-                % Otherwise set the client parameter to that connection
-                %
-                self.conn = r;
-            end
+            self.conn = tcpclient(self.host,self.port);
+            self.conn.InputBufferSize = 2^24;
+            self.conn.OutputBufferSize = 2^24;
         end
         
         function self = close(self)
             %CLOSE Closes the connection to the host
-            if ~isempty(self.conn) && isvalid(self.conn) && strcmpi(self.conn.Status,'open')
-                fclose(self.conn);
-            end
-            delete(self.conn);
             self.conn = [];
         end
         
@@ -107,7 +82,7 @@ classdef mku < handle
             %   vector) and returns the response R (a character vector)
             %
             self.open;
-            fprintf(self.conn,cmd);
+            self.conn.writeline(cmd);
             pause(10e-3);
             jj = 1;
             while ~self.conn.BytesAvailable
@@ -118,7 +93,8 @@ classdef mku < handle
                 jj = jj + 1;
             end
             pause(100e-3);
-            r = char(fread(self.conn,self.conn.BytesAvailable))';
+            r = char(self.conn.read(self.conn.BytesAvailable));
+            r = r(:)';
             self.close;
         end
         

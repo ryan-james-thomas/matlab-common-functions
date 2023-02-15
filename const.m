@@ -311,7 +311,7 @@ classdef const < handle
             end
         end
         
-        function [n3D,R] = bec_properties(real_trap_freqs,num_atoms,scattering_length,atom_mass)
+        function [n3D,R,chemical_potential] = bec_properties(real_trap_freqs,num_atoms,scattering_length,atom_mass)
             f = 2*pi*real_trap_freqs;
             fmean = prod(f)^(1/3);
             U0 = 4*pi*const.hbar^2*scattering_length/atom_mass;

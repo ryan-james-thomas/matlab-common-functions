@@ -1,5 +1,5 @@
-function plot_format(x,y,t,fsize)
-xlabel(x,'FontSize',fsize);
-ylabel(y,'FontSize',fsize);
-title(t,'FontSize',fsize);
+function plot_format(x,y,t,fsize,varargin)
+xlabel(x,'FontSize',fsize,varargin{:});
+ylabel(y,'FontSize',fsize,varargin{:});
+title(t,'FontSize',fsize,varargin{:});
 set(gca,'FontSize',fsize);

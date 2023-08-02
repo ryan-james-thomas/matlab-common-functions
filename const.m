@@ -311,13 +311,37 @@ classdef const < handle
             end
         end
         
-        function [n3D,R,chemical_potential] = bec_properties(real_trap_freqs,num_atoms,scattering_length,atom_mass)
+        function [n3Dbec,R,chemical_potential,Tc,excited_fraction,n3Dthermal] = bec_properties(real_trap_freqs,num_atoms,varargin)
+            if numel(varargin) > 0 && mod(numel(varargin),2) ~= 0
+                error('Variable arguments must appear as name/value pairs!');
+            end
+            
+            scattering_length = 100*const.aBohr;
+            atom_mass = const.mRb;
+            temperature = 0;
+            for nn = 1:2:numel(varargin)
+                v = varargin{nn + 1};
+                switch lower(varargin{nn})
+                    case {'a','scattering length','scatt_length','length'}
+                        scattering_length = v;
+                    case {'mass','m'}
+                        atom_mass = v;
+                    case {'t','temperature'}
+                        temperature = v;
+                end
+            end
+            
             f = 2*pi*real_trap_freqs;
             fmean = prod(f)^(1/3);
             U0 = 4*pi*const.hbar^2*scattering_length/atom_mass;
-            chemical_potential = (15*num_atoms*U0/(8*pi))^(2/5)*(atom_mass*fmean^2/2)^(3/5);
-            n3D = chemical_potential/U0;
+            Tc = const.hbar*fmean*num_atoms^(1/3)/(const.kb*zeta(3)^(1/3));
+            excited_fraction = (temperature/Tc).^3;
+            Nex = num_atoms*excited_fraction;
+            Nbec = num_atoms - Nex;
+            chemical_potential = (15*Nbec*U0/(8*pi))^(2/5)*(atom_mass*fmean^2/2)^(3/5);
+            n3Dbec = chemical_potential/U0;
             R = sqrt(2*chemical_potential./(atom_mass*f.^2));
+            n3Dthermal = Nex/((2*pi)^1.5*(const.kb*temperature/const.mRb)^1.5)*fmean^3;
         end
         
         function y = sinc(x)

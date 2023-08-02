@@ -160,13 +160,13 @@ classdef odt < handle
             else
                 error('Atom type not supported!');
             end
-            w = 2*pi*const.c/wavelength;
+            w = 2*pi*const.c./wavelength;
             a = 0;
             b = 0;
             for nn=1:numel(atom)
                 w0 = 2*pi*const.c/atom(nn).wavelength;
                 a = a + (2*atom(nn).J+1)/2*pi*const.c^2/(2*w0.^3).*atom(nn).decay.*((w0+w).^(-1)+(w0-w).^(-1));
-                b = b + (2*atom(nn).J+1)/2*pi*const.c^2/(2*w0.^3).*atom(nn).decay^2.*((w0+w).^(-2)+(w0-w).^(-2));
+                b = b + (2*atom(nn).J+1)/2*pi*const.c^2/(2*const.hbar*w0.^3).*(w/w0).^3.*atom(nn).decay^2.*((w0+w).^(-1)+(w0-w).^(-1)).^2;
             end
         end
     end

@@ -130,7 +130,8 @@ classdef nonlinfit < FitClass
             catch
                 obj.c = cvalues(:);
             end
-            
+            obj.Vcov = diag(obj.c(:,2).^2);
+            obj.Vcorr = eye(size(obj.c,1));
             obj.gof.dof = gof.dfe;
             obj.gof.chi2 = gof.sse/gof.dfe;
             obj.gof.prob = 1-gammainc(gof.sse/2,gof.dfe/2);

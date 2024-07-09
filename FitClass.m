@@ -114,6 +114,39 @@ classdef FitClass < handle
             end
             obj.func = func;
         end
+        
+        %XPLOT Generates x points on a dense grid for plotting
+        function xx = xplot(obj,Nplot,extendRange,includeZero)
+            if nargin == 1
+                Nplot = 1e3;
+                extendRange = 0.1;
+                includeZero = 1;
+            elseif nargin == 2
+                extendRange = 0.1;
+                includeZero = 1;
+            elseif nargin == 3
+                includeZero = 1;
+            end
+            if Nplot > numel(obj.x)
+                xExt = extendRange*range(obj.x(~obj.ex));
+                xMin = min(obj.x(~obj.ex));
+                xMax = max(obj.x(~obj.ex));
+                if includeZero
+                    if xMin > 0
+                        xx = linspace(0,xMax+xExt,Nplot);
+                    elseif xMax < 0
+                        xx = linspace(xMin-xExt,0,Nplot);
+                    else
+                        xx = linspace(xMin-xExt,xMax+xExt,Nplot);
+                    end
+                else
+                    xx = linspace(xMin-xExt,xMax+xExt,Nplot);
+                end
+            else
+                xx = obj.x(~obj.ex);
+            end
+            xx = xx(:);
+        end
 
         %PLOT Plots the data and fit function together along with residuals
         function plot(obj,varargin)
@@ -152,8 +185,8 @@ classdef FitClass < handle
             else
                 xplot = obj.x(~obj.ex);
             end
-            xplot = xplot(:);
-            yplot = obj.f(xplot);
+            xx = obj.xplot(1e3,0.1,includeZero);
+            yplot = obj.f(xx);
             if plotResiduals
                 subplot(3,1,1:2);
             end
@@ -163,7 +196,7 @@ classdef FitClass < handle
                 plot(obj.x(~obj.ex),obj.y(~obj.ex),'o','markersize',4);
             end
             hold on;
-            plot(xplot,yplot,'r-');
+            plot(xx,yplot,'r-');
 %             hold off;
             if plotResiduals
                 subplot(3,1,3);
@@ -206,7 +239,7 @@ classdef FitClass < handle
                     idx = randi(numel(self.y),numel(self.y),1);
                     self.set(s.x(idx),s.y(idx),s.dy(idx),s.ex(idx));
                 else
-                    self.dy = self.f(self.x) + self.dy*randn(size(self.dy));
+                    self.y = self.f(self.x) + self.dy*randn(size(self.dy));
                 end
                 tmp = self.fit;
                 coeffs(nn,:) = tmp(:,1)';

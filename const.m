@@ -149,36 +149,41 @@ classdef const < handle
             %   data with different y axes.  Allowed values are 'pow' for
             %   RMS power, 'amp' for RMS amplitude, and 'nsd' for noise
             %   spectral density.
-            if nargin>=3
-                [Y,f]=const.calcFFT(data,dt,sm);
+            if nargin >= 3
+                [Y,f] = const.calcFFT(data,dt,sm);
             else
-                [Y,f]=const.calcFFT(data,dt);
+                [Y,f] = const.calcFFT(data,dt);
             end
-            Y=Y/sqrt(2);    %Appropriate for noise calculations as RMS/average values
-            if nargin<4 || strcmpi(plotType,'pow')
+            Y = Y/sqrt(2);    %Appropriate for noise calculations as RMS/average values
+            if nargin < 4 || strcmpi(plotType,'pow')
                 plot(f,abs(Y).^2,'.-');
                 xlabel('Frequency [Hz]');ylabel('Average Power [arb. units]');
             elseif strcmpi(plotType,'amp')
                 plot(f,abs(Y),'.-');
                 xlabel('Frequency [Hz]');ylabel('RMS Amplitude [V]');
             elseif strcmpi(plotType,'nsd')
-                loglog(f,abs(Y)/sqrt(diff(f(1:2))),'.-');
+                [P,f] = const.calcPSD(data,dt,sm);
+                loglog(f,sqrt(P),'.-');
                 xlabel('Frequency [Hz]');ylabel('Noise amplitude spectral density [[x units] Hz^{-1/2}]');
             elseif strcmpi(plotType,'psd')
-                loglog(f,(abs(Y)/sqrt(diff(f(1:2)))).^2,'.-');
+                [P,f] = const.calcPSD(data,dt,sm);
+                loglog(f,P,'.-');
                 xlabel('Frequency [Hz]');ylabel('Noise power spectral density [[x units]^2 Hz^{-1}]');
             end
             xlim([0,max(f)]);
         end
         
-        function [Y,f]=calcFFT(data,dt,sm)
-            %CALCFFT Calculates the FFT of the data
+        function [Y,f] = calcFFT(data,dt,sm)
+            %CALCFFT Calculates the single-sided FFT of the REAL data
             %
             %   const.calcFFT(data,dt) calculates the FFT of the data with 
             %   time step dt.
             %
             %   const.calcFFT(data,dt,sm) calculates the FFT of the data 
             %   with time step dt with the smoothed signal removed.  
+            if any(imag(data) ~= 0)
+                warning('const.calcFFT assumes the data is real!');
+            end
             if numel(dt) > 1
                 dt = abs(dt(2)-dt(1));
             end
@@ -186,13 +191,16 @@ classdef const < handle
             f = 1/(dt)*(0:N-1)/(N);
             f = f(1:floor(N/2));
             f = f(:);
-            if nargin==3
+            if nargin == 3
                 data = const.smooth(data,sm);
             end
             Y = fft(data,[],1);
             Y = Y(1:floor(N/2),:);
+            % The factor of two for the f ~= 0 components assumes that the
+            % data is real, so that positive and negative frequency
+            % components have the same amplitude
             Y(1,:) = Y(1,:)/N;
-            Y(2:end,:) = Y(2:end,:)/N;
+            Y(2:end,:) = 2*Y(2:end,:)/N;
         end
         
         function y = smooth(data,sm)

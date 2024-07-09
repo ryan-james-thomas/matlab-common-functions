@@ -73,9 +73,13 @@ classdef FigureMaker < handle
         end
         
         function self = make_all_axes(self)
-            for row = 1:self.dims(1)
-                for col = 1:self.dims(2)
-                    self.make_axes(row,col);
+            if prod(self.dims) == 1 && isempty([self.x0,self.y0,self.xw,self.yw])
+                self.axs(1,1) = axes;
+            else
+                for row = 1:self.dims(1)
+                    for col = 1:self.dims(2)
+                        self.make_axes(row,col);
+                    end
                 end
             end
             

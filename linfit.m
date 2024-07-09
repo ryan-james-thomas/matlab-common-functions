@@ -1,5 +1,10 @@
 classdef linfit < FitClass
 %LINFIT A SubClass of FitClass for fitting linear functions
+
+    properties
+        non_negative
+    end
+
     methods
         %LINFIT Defines the FitClass object with variable length
         %arguments
@@ -9,6 +14,7 @@ classdef linfit < FitClass
         %either an array of logical values or indices to exclude
         function obj = linfit(varargin)
             obj=obj@FitClass(varargin{:});
+            obj.non_negative = false;
         end
 
         %SETFITFUNC Sets the fitting function
@@ -54,9 +60,13 @@ classdef linfit < FitClass
         function p = fit(obj)
             V = diag(obj.dy(~obj.ex).^(-2));
             C = obj.func(obj.x(~obj.ex));
-            A = C'*V*C;
-            b = C'*V*obj.y(~obj.ex);
-            p = A\b;
+            if obj.non_negative
+                p = lsqnonneg(C,obj.y(~obj.ex));
+            else
+                A = C'*V*C;
+                b = C'*V*obj.y(~obj.ex);
+                p = A\b;
+            end
             p(:,1) = p(:);
             obj.Vcov = inv(C'*V*C);
             p(:,2) = sqrt(diag(obj.Vcov));
@@ -86,7 +96,27 @@ classdef linfit < FitClass
             x = x(:);
             err = sqrt(diag(obj.func(x)*obj.Vcov*obj.func(x)'));
         end
+
+        function s = struct(self)
+            s = struct@FitClass(self);
+            s.non_negative = self.non_negative;
+        end
         
+    end
+
+    methods(Static)
+        function s = loadobj(a)
+            %LOADOBJ Converts structure into class
+            s = linfit(a.x,a.y,a.dy,a.ex);
+            s.func = a.func;
+            s.useErr = a.useErr;
+            s.c = a.c;
+            s.Vcov = a.Vcov;
+            s.Vcorr = a.Vcorr;
+            s.res = a.res;
+            s.gof = a.gof;
+            s.non_negative = a.non_negative;
+        end
     end
 
 end

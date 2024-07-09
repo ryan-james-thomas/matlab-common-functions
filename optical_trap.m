@@ -149,7 +149,9 @@ classdef optical_trap < handle
                         xs = r0(1) + 1e-7;
                         result = search_for_zero(@(x) self.force(x,r0(2),r0(3),'x'),xs,5e-3,dr);
                     else
-                        result = [];
+%                         result = [];
+                        xs = r0(1) + 1e-7;
+                        result = search_for_zero(@(x) self.force(x,r0(2),r0(3),'x'),xs,5e-3,dr);
                     end
 
                     if isempty(result)
@@ -169,7 +171,9 @@ classdef optical_trap < handle
                         xs = r0(2) + 1e-7;
                         result = search_for_zero(@(x) self.force(r0(1),x,r0(3),'y'),xs,5e-3,dr);
                     else
-                        result = [];
+%                         result = [];
+                        xs = r0(2) + 1e-7;
+                        result = search_for_zero(@(x) self.force(r0(1),x,r0(3),'y'),xs,5e-3,dr);
                     end
 
                     if isempty(result)

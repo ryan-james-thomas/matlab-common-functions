@@ -344,7 +344,11 @@ classdef const < handle
             fmean = prod(f)^(1/3);
             U0 = 4*pi*const.hbar^2*scattering_length/atom_mass;
             Tc = const.hbar*fmean*num_atoms^(1/3)/(const.kb*zeta(3)^(1/3));
-            excited_fraction = (temperature/Tc).^3;
+            if temperature >= Tc
+                excited_fraction = 1;
+            else
+                excited_fraction = (temperature/Tc).^3;
+            end
             Nex = num_atoms*excited_fraction;
             Nbec = num_atoms - Nex;
             chemical_potential = (15*Nbec*U0/(8*pi))^(2/5)*(atom_mass*fmean^2/2)^(3/5);

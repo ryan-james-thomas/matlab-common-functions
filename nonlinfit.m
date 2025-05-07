@@ -106,11 +106,13 @@ classdef nonlinfit < FitClass
         %MAKEFITOBJECTS Creates the internal fit objects for fitting data
         function obj = makeFitObjects(obj)
             obj.fo = fitoptions('method','NonlinearLeastSquares');
-            set(obj.fo,'MaxFunEvals',1500);
-            set(obj.fo,'Lower',obj.lower,'Upper',obj.upper,...
-                'StartPoint',obj.guess,'Exclude',obj.ex);
+            obj.fo.MaxFunEvals = 1500;
+            obj.fo.Lower = obj.lower;
+            obj.fo.Upper = obj.upper;
+            obj.fo.StartPoint = obj.guess;
+            obj.fo.Exclude = obj.ex;
             if obj.useErr
-                set(obj.fo,'Weight',obj.dy.^(-2));
+                obj.fo.Weights = obj.dy.^(-2);
             end
             
             obj.ft = fittype(obj.func);

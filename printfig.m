@@ -2,7 +2,7 @@ function printfig(fig,filename,varargin)
 
 filetype = 'pdf';
 fileres = 300;
-printmethod = 'painters';
+printmethod = 'vector';
 savematlabfig = false;
 fig_size = [];
 
@@ -32,7 +32,11 @@ if isempty(fig_size)
 end
 set(fig,'paperunits','centimeters','papersize',fig_size,'paperposition',[0,0,fig_size]);
 
-print(fig,[filename,'.',filetype],['-d',filetype],['-r',sprintf('%d',fileres)],['-',printmethod]);
+if strcmpi(filename,'copy')
+    print(fig,'-clipboard','-dbitmap',['-r',sprintf('%d',fileres)]);
+else
+    print(fig,[filename,'.',filetype],['-d',filetype],['-r',sprintf('%d',fileres)],['-',printmethod]);
+end
 if savematlabfig
     savefig(fig,[filename,'.fig']);
 end

@@ -58,25 +58,27 @@ classdef linfit < FitClass
         
         %FIT Performs a linear fit using matrices
         function p = fit(obj)
-            V = diag(obj.dy(~obj.ex).^(-2));
+            % V = diag(obj.dy(~obj.ex).^(-2));
+            V = obj.dy(~obj.ex).^(-2);
             C = obj.func(obj.x(~obj.ex));
+            CV = (V.*C)';
+            A = CV*C;
             if obj.non_negative
                 p = lsqnonneg(C,obj.y(~obj.ex));
             else
-                A = C'*V*C;
-                b = C'*V*obj.y(~obj.ex);
+                b = CV*obj.y(~obj.ex);
                 p = A\b;
             end
             p(:,1) = p(:);
-            obj.Vcov = inv(C'*V*C);
+            obj.Vcov = inv(A);
             p(:,2) = sqrt(diag(obj.Vcov));
             obj.Vcorr = obj.Vcov./(p(:,2)*p(:,2).');
             obj.c = p;
             
-            obj.res = (obj.y(~obj.ex)-obj.f(obj.x(~obj.ex)))./obj.dy(~obj.ex);
-            obj.gof.dof = numel(obj.y(~obj.ex))-numel(obj.func(0));
+            obj.res = (obj.y(~obj.ex) - obj.f(obj.x(~obj.ex)))./obj.dy(~obj.ex);
+            obj.gof.dof = numel(obj.y(~obj.ex)) - numel(obj.func(0));
             obj.gof.chi2 = sum(obj.res.^2)/obj.gof.dof;
-            obj.gof.prob = 1-gammainc(obj.gof.chi2/2,obj.gof.dof/2);
+            obj.gof.prob = 1 - gammainc(obj.gof.chi2/2,obj.gof.dof/2);
         end
         
         %F Returns the function value

@@ -1,12 +1,13 @@
 classdef const < handle
     properties(Constant)
         %% Universal constants
-        amu=1.660538921e-27;
+        amu = 1.660538921e-27;
         mK = 39.963998166*const.amu;  %Mass of 40K
         mRb = 86.909180527*const.amu;    %Mass of 87Rb
         mK41=40.96182576*const.amu;   %Mass of 41K
         mRb85 = 84.911789738*const.amu;
         mK39 = 38.96370668*const.amu;
+        mCs = 132.905451931*const.amu;
 
         e=1.609e-19;    %C
         h=6.62606957e-34;

@@ -104,6 +104,13 @@ classdef FitClass < handle
             end
             obj.checkSizes();
         end
+
+        %SORT sorts the data by increasing x values
+        function sort(obj)
+            [obj.x,k] = sort(obj.x);
+            obj.y = obj.y(k);
+            obj.dy = obj.dy(k);
+        end
         
         %SETFITFUNC Sets the fitting function as an anonymous function.
         %This function should be of the form @(a,b,c,...,x) where a,b,c,...

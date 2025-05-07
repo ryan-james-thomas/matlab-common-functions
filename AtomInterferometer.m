@@ -57,6 +57,10 @@ classdef AtomInterferometer < handle
                     weights = ones(size(T));
                 end
                 ai_type = 'mz';
+            elseif nargin == 6
+                if isempty(weights)
+                    weights = ones(size(T));
+                end
             end
             noise = zeros(numel(T),1);
             for nn = 1:numel(T)

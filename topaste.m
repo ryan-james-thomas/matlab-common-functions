@@ -13,7 +13,7 @@ end
 
 
 % Set the figure background color to white
-set(gcf, 'Color', 'white');
+% set(gcf, 'Color', 'white');
 
 % Capture the screenshot
 img = getframe(gcf);

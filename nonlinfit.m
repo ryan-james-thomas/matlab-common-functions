@@ -122,7 +122,8 @@ classdef nonlinfit < FitClass
         function p = fit(obj)
             obj.makeFitObjects;
             
-            [fr_,gof,output] = fit(obj.x,obj.y,obj.ft,obj.fo);
+            % [fr_,gof,output] = fit(obj.x,obj.y,obj.ft,obj.fo);
+            [fr_,gof] = fit(obj.x,obj.y,obj.ft,obj.fo);
             
             cvalues = coeffvalues(fr_); %Returns coefficient values in same order as in 'fittype'
             try
@@ -136,9 +137,9 @@ classdef nonlinfit < FitClass
             obj.Vcorr = eye(size(obj.c,1));
             obj.gof.dof = gof.dfe;
             obj.gof.chi2 = gof.sse/gof.dfe;
-            obj.gof.prob = 1-gammainc(gof.sse/2,gof.dfe/2);
+            obj.gof.prob = 1 - gammainc(gof.sse/2,gof.dfe/2);
             
-            obj.res = output.residuals(:);
+            obj.res = obj.y - obj.f(obj.x);
 
             p = obj.c;
         end

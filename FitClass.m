@@ -38,7 +38,8 @@ classdef FitClass < handle
             if nargin == 3
                 obj.x = x(:);
                 obj.y = y(:);
-                obj.dy = 1e-2*range(obj.y).*ones(size(obj.x));
+                % obj.dy = 1e-2*range(obj.y).*ones(size(obj.x));
+                obj.dy = ones(size(obj.x));
                 obj.useErr = false;
                 obj.ex = false(size(obj.x));
             elseif nargin >= 4
@@ -207,7 +208,7 @@ classdef FitClass < handle
 %             hold off;
             if plotResiduals
                 subplot(3,1,3);
-                errorbar(obj.x(~obj.ex),obj.res,ones(size(obj.x(~obj.ex))),'o','markersize',4);
+                errorbar(obj.x(~obj.ex),obj.res(~obj.ex),ones(size(obj.x(~obj.ex))),'o','markersize',4);
                 hold on;
                 grid on;
             end

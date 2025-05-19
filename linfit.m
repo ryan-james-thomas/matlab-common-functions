@@ -75,9 +75,9 @@ classdef linfit < FitClass
             obj.Vcorr = obj.Vcov./(p(:,2)*p(:,2).');
             obj.c = p;
             
-            obj.res = (obj.y(~obj.ex) - obj.f(obj.x(~obj.ex)))./obj.dy(~obj.ex);
+            obj.res = (obj.y - obj.f(obj.x))./obj.dy;
             obj.gof.dof = numel(obj.y(~obj.ex)) - numel(obj.func(0));
-            obj.gof.chi2 = sum(obj.res.^2)/obj.gof.dof;
+            obj.gof.chi2 = sum(obj.res(~obj.ex).^2)/obj.gof.dof;
             obj.gof.prob = 1 - gammainc(obj.gof.chi2/2,obj.gof.dof/2);
         end
         

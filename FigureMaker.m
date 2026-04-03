@@ -77,6 +77,9 @@ classdef FigureMaker < handle
         end
         
         function self = make_all_axes(self,reverse_direction)
+            clf(self.fig);
+            self.axs = axes;
+            delete(self.axs);
             if nargin < 2
                 reverse_direction = false;
             end

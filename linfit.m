@@ -25,7 +25,9 @@ classdef linfit < FitClass
         %@(x) [ones(size(x(:))) x(:)]
         function setFitFunc(obj,varargin)
             if numel(varargin) == 2 && strcmpi(varargin{1},'poly')
-                if numel(varargin{2}) == 1
+                if iscell(varargin{2})
+                    idx = cell2mat(varargin{2});
+                elseif isscalar(varargin{2})
                     idx = 0:varargin{2};
                 else
                     idx = varargin{2};

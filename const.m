@@ -166,10 +166,20 @@ classdef const < handle
                 [P,f] = const.calcPSD(data,dt,sm);
                 loglog(f,sqrt(P),'.-');
                 xlabel('Frequency [Hz]');ylabel('Noise amplitude spectral density [[x units] Hz^{-1/2}]');
+            elseif strcmpi(plotType,'nsd-pwelch')
+                [P,f] = const.pwelch(data,dt);
+                loglog(f,sqrt(P),'.-');
+                xlabel('Frequency [Hz]');ylabel('Noise amplitude spectral density [[x units] Hz^{-1/2}]');
             elseif strcmpi(plotType,'psd')
                 [P,f] = const.calcPSD(data,dt,sm);
                 loglog(f,P,'.-');
                 xlabel('Frequency [Hz]');ylabel('Noise power spectral density [[x units]^2 Hz^{-1}]');
+            elseif strcmpi(plotType,'psd-pwelch')
+                [P,f] = const.pwelch(data,dt);
+                loglog(f,P,'.-');
+                xlabel('Frequency [Hz]');ylabel('Noise power spectral density [[x units]^2 Hz^{-1}]');
+            else
+                error('Unknown option ''%s''',plotType);
             end
             xlim([0,max(f)]);
         end
@@ -187,6 +197,9 @@ classdef const < handle
             end
             if numel(dt) > 1
                 dt = abs(dt(2)-dt(1));
+            end
+            if size(data,1) == 1 && size(data,2) > 1
+                data = data.';
             end
             N = size(data,1);
             f = 1/(dt)*(0:N-1)/(N);
@@ -223,15 +236,30 @@ classdef const < handle
             end
         end
         
-        function y = butterworth(data,width,order)
+        function y = butterworth(data,width,order,is_acausal)
             if nargin < 3
                 order = 4;
+            end
+            if nargin < 4
+                is_acausal = true;
+            end
+            if size(data,1) == 1 && size(data,2) ~= 1
+                sz = size(data);
+                data = data.';
             end
             Y = fftshift(fft(data));
             N = size(Y,1);
             f = 0.5*linspace(-1,1,N)';
-            F = (1 + (f*width).^(2*order)).^-1;
-            y = real(ifft(ifftshift(Y.*F)));
+            if is_acausal
+                F = (1 + (f*width).^(2*order)).^-1;
+                y = real(ifft(ifftshift(Y.*F)));
+            else
+                s = 1i*f*width;
+                k = 1:order;
+                F = prod((s - exp(1i*(2*k + order - 1)*pi/(2*order))).^-1,2);
+                y = real(ifft(ifftshift(Y.*F)));
+            end
+            y = reshape(y,sz);
         end
 
         function y = butterworth2D(data,width,order)
@@ -259,6 +287,43 @@ classdef const < handle
             [Y,f] = const.calcFFT(data,dt,varargin{:});
             Y = Y/sqrt(2);
             P = abs(Y).^2./(f(2)-f(1));
+        end
+
+        function [P,f] = pwelch(data,dt,varargin)
+            if numel(dt) > 1
+                dt = diff(dt(1:2));
+            end
+            window = hanning(floor(size(data,1)/8));
+            [P,f] = pwelch(data,window,[],size(data,1),1/dt);
+        end
+
+        function [PSDa,fa] = aliased_psd(f,PSD,sample_rate)
+            Na = find(f >= sample_rate/2,1,'first');
+            Nsegments = floor(numel(f)/Na);
+            Nmax = Nsegments*Na;
+            fa = f(1:Na);
+            PSDa = PSD(:);
+            PSDa = reshape(PSDa(1:Nmax),Na,Nsegments);
+            PSDa = sum(PSDa(:,1:2:end),2) + sum(flipud(PSDa(:,2:2:end)),2);
+        end
+
+        function y = invert_psd(psd_func,t)
+            if ~isa(psd_func,'function_handle')
+                error('First argument must be a function handle');
+            end
+            t = t(:);
+            dt = t(2) - t(1);
+            N = numel(t);
+            f = 1/(2*dt)*linspace(-1,1,N)';
+            df = f(2) - f(1);
+            PSD = zeros(size(f));
+            PSD(f >= 0) = psd_func(f(f >= 0));
+            % PSD = PSD*df*sqrt(2)*numel(f)^2;
+            Y = N.*sqrt(PSD.*df/2).*exp(1i*2*pi*rand(size(PSD)));
+            Y(isnan(Y) | isinf(Y)) = 0;
+            Y(f == 0) = 0;
+            Y(f < 0) = conj(flip(Y(f > 0)));
+            y = real(ifft(ifftshift(Y)));
         end
         
         function [R,tau] = calcAutoCorrelation(data,dt,method,varargin)

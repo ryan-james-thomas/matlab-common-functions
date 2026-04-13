@@ -228,6 +228,12 @@ classdef FitClass < handle
                 v = obj.func(cc{:},x);
             end
         end
+
+        function self = compute_gof(self,num_fit_parameters)
+            self.gof.dof = numel(self.y(~self.ex)) - num_fit_parameters;
+            self.gof.chi2 = sum(self.res(~self.ex).^2);
+            self.gof.prob = gammainc(self.gof.chi2/2,self.gof.dof/2,'upper');
+        end
         
         function self = montecarlo(self,iter,bootstrap)
             %MONTECARLO Performs Monte Carlo analysis of the fit result
@@ -241,17 +247,30 @@ classdef FitClass < handle
             
             s = struct(self);
             coeffs = zeros(iter,size(s.c,1));
-            
-            for nn = 1:iter
+            warnID_ICM = 'MATLAB:illConditionedMatrix';
+            warnID_SGL = 'MATLAB:singularMatrix';
+            warning('off',warnID_ICM);
+            warning('off',warnID_SGL);
+            nn = 1;
+            while nn < iter
                 if nargin < 3 || bootstrap
                     idx = randi(numel(self.y),numel(self.y),1);
                     self.set(s.x(idx),s.y(idx),s.dy(idx),s.ex(idx));
                 else
                     self.y = self.f(self.x) + self.dy*randn(size(self.dy));
                 end
+                lastwarn('');
                 tmp = self.fit;
+                [~,id] = lastwarn;
+                if strcmp(id,warnID_ICM) || strcmp(id,warnID_SGL)
+                    continue;
+                else
+                    nn = nn + 1;
+                end
                 coeffs(nn,:) = tmp(:,1)';
             end
+            warning('on',warnID_ICM);
+            warning('on',warnID_SGL);
             
             self.Vcov = cov(coeffs);
             self.Vcorr = corr(coeffs);

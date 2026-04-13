@@ -78,9 +78,7 @@ classdef linfit < FitClass
             obj.c = p;
             
             obj.res = (obj.y - obj.f(obj.x))./obj.dy;
-            obj.gof.dof = numel(obj.y(~obj.ex)) - numel(obj.func(0));
-            obj.gof.chi2 = sum(obj.res(~obj.ex).^2)/obj.gof.dof;
-            obj.gof.prob = 1 - gammainc(obj.gof.chi2/2,obj.gof.dof/2);
+            obj.compute_gof(numel(obj.func(0)));
         end
         
         %F Returns the function value

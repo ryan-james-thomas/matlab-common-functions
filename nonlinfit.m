@@ -22,6 +22,12 @@ classdef nonlinfit < FitClass
         function obj = nonlinfit(varargin)
             obj=obj@FitClass(varargin{:});
         end
+
+        function [anoninputs,N] = get_anon_inputs(self)
+            anoninputs = strsplit(regexp(func2str(self.func), '(?<=^@\()[^\)]*', 'match', 'once'), ',');
+            N = numel(anoninputs) - 1;
+            anoninputs = anoninputs(1:N);
+        end
         
         %BOUNDS Sets the bounds and guess for the nonlinear fit
         %
@@ -38,9 +44,9 @@ classdef nonlinfit < FitClass
                 varargout{1} = obj;
             else
                 if ~isempty(obj.func) && isa(obj.func,'function_handle')
-                    anoninputs = strsplit(regexp(func2str(obj.func), '(?<=^@\()[^\)]*', 'match', 'once'), ',');
+                    [anoninputs,N] = obj.get_anon_inputs;
                     fprintf(1,'Arguments:');
-                    for nn = 1:(numel(anoninputs)-1)
+                    for nn = 1:N
                         fprintf(1,'\t%10s',anoninputs{nn});
                     end
                     fprintf(1,'\n');
@@ -64,12 +70,8 @@ classdef nonlinfit < FitClass
                 error('A function must be supplied to use this method!');
             end
             
-            anoninputs = strsplit(regexp(func2str(self.func), '(?<=^@\()[^\)]*', 'match', 'once'), ',');
-            N = numel(anoninputs) - 1;
-            anoninputs = anoninputs(1:N);
-            
-%             [self.lower,self.upper,self.guess] = deal(NaN(1,N));
-            for nn = 1:numel(anoninputs)
+            [anoninputs,N] = self.get_anon_inputs;
+            for nn = 1:N
                 for mm = 1:2:numel(varargin)
                     if strcmp(varargin{mm},anoninputs{nn})
                         self.lower(nn) = varargin{mm + 1}(1);
@@ -85,9 +87,7 @@ classdef nonlinfit < FitClass
             if nargin < 3
                 idx = 1:2;
             end
-            anoninputs = strsplit(regexp(func2str(self.func), '(?<=^@\()[^\)]*', 'match', 'once'), ',');
-            N = numel(anoninputs) - 1;
-            anoninputs = anoninputs(1:N);
+            [anoninputs,N] = self.get_anon_inputs;
             for nn = 1:N
                 if strcmp(p,anoninputs{nn})
                     r = self.c(nn,idx);
@@ -135,12 +135,9 @@ classdef nonlinfit < FitClass
             end
             obj.Vcov = diag(obj.c(:,2).^2);
             obj.Vcorr = eye(size(obj.c,1));
-            obj.gof.dof = gof.dfe;
-            obj.gof.chi2 = gof.sse/gof.dfe;
-            obj.gof.prob = 1 - gammainc(gof.sse/2,gof.dfe/2);
-            
             obj.res = obj.y - obj.f(obj.x);
-
+            [~,N] = obj.get_anon_inputs;
+            obj.compute_gof(N);
             p = obj.c;
         end
         

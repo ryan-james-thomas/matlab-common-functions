@@ -151,13 +151,13 @@ classdef const < handle
             %   RMS power, 'amp' for RMS amplitude, and 'nsd' for noise
             %   spectral density.
             if nargin >= 3
-                [Y,f] = const.calcFFT(data,dt,sm);
+                [Y,f,acr,ecr] = const.calcFFT(data,dt,sm);
             else
-                [Y,f] = const.calcFFT(data,dt);
+                [Y,f,acr,ecr] = const.calcFFT(data,dt);
             end
             Y = Y/sqrt(2);    %Appropriate for noise calculations as RMS/average values
             if nargin < 4 || strcmpi(plotType,'pow')
-                plot(f,abs(Y).^2,'.-');
+                plot(f,abs(Y).^2*ecr^2/acr^2,'.-');
                 xlabel('Frequency [Hz]');ylabel('Average Power [arb. units]');
             elseif strcmpi(plotType,'amp')
                 plot(f,abs(Y),'.-');
@@ -184,7 +184,7 @@ classdef const < handle
             xlim([0,max(f)]);
         end
         
-        function [Y,f] = calcFFT(data,dt,sm)
+        function [Y,f,acf,ecf] = calcFFT(data,dt,sm)
             %CALCFFT Calculates the single-sided FFT of the REAL data
             %
             %   const.calcFFT(data,dt) calculates the FFT of the data with 
@@ -208,8 +208,14 @@ classdef const < handle
             if nargin == 3
                 data = const.smooth(data,sm);
             end
-            Y = fft(data,[],1);
-            Y = Y(1:floor(N/2),:);
+            %weights
+            weight_window = hann(N);
+            % weight_window = ones(size(data));
+            acf = 1/mean(weight_window); %Amplitude correction factor
+            ecf = 1/rms(weight_window);  %Energy/Power correction factor
+
+            Y = fft(data.*weight_window,[],1);
+            Y = acf*Y(1:floor(N/2),:);
             % The factor of two for the f ~= 0 components assumes that the
             % data is real, so that positive and negative frequency
             % components have the same amplitude
@@ -284,16 +290,19 @@ classdef const < handle
             %   be a vector of times which is used to calculate the time
             %   difference.  VARARGIN is any valid variable argument list
             %   for CALCFFT
-            [Y,f] = const.calcFFT(data,dt,varargin{:});
+            [Y,f,acr,ecf] = const.calcFFT(data,dt,varargin{:});
             Y = Y/sqrt(2);
-            P = abs(Y).^2./(f(2)-f(1));
+            P = abs(Y).^2./(f(2)-f(1))*ecf^2/acr^2;
         end
 
-        function [P,f] = pwelch(data,dt,varargin)
+        function [P,f] = pwelch(data,dt,num_segments)
             if numel(dt) > 1
                 dt = diff(dt(1:2));
             end
-            window = hanning(floor(size(data,1)/8));
+            if nargin < 3
+                num_segments = 8;
+            end
+            window = hann(floor(size(data,1)/num_segments));
             [P,f] = pwelch(data,window,[],size(data,1),1/dt);
         end
 
